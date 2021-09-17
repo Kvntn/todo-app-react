@@ -1,87 +1,73 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
+import ToDoItem from "./ToDoItem";
 
-class TodoList extends Component {
-  constructor() {
-    super();
-    this.state = {
-      userInput: "",
-      items: localStorage.getItem("TodoList")
-        ? localStorage.getItem("TodoList").split(",")
-        : [],
+const TodoList = () => {
+    const [userInput, setUserInput] = useState("");
+    const [items, setItems] = useState(
+        localStorage.getItem("TodoList")
+            ? localStorage.getItem("TodoList").split(",")
+            : []
+    );
+    console.log(items);
+    const addTodo = (e) => {
+        e.preventDefault();
+        const input = userInput;
+        let newItems = [...items, input];
+        localStorage.setItem("TodoList", newItems);
+        console.log("addTodo", userInput, input, e.target.value);
+        setItems(newItems);
+        setUserInput("");
+        localStorage.setItem("TodoList", items);
+
+        // console.log(localStorage);
     };
-  }
 
-  onChange(event) {
-    this.setState({
-      userInput: event.target.value,
-    });
-  }
+    useEffect(() => {
+        localStorage.setItem("TodoList", items);
+        document.title = `${items.length} tasks remaining`;
+    }, [items]);
 
-  addTodo(event) {
-    event.preventDefault();
-    let input = this.state.userInput.trim();
-    console.log(input);
-    if (input != null && input !== "") {
-      this.setState(
-        {
-          items: [...this.state.items, input],
-          userInput: "",
-        },
-        () => {
-          localStorage.setItem("TodoList", this.state.items);
-        }
-      );
+    const removeTodo = (index) => {
+        // e.preventDefault();
+        setItems((currItems) => {
+            const newValues = currItems.filter((item, idx) => idx !== index);
 
-      console.log(localStorage);
-    }
-  }
+            return newValues;
+        });
+    };
 
-  removeTodo(item) {
-    const arr = this.state.items;
-    const index = arr.indexOf(item);
-    arr.splice(index, 1);
+    const onChange = (e) => {
+        setUserInput(e.target.value);
+        // console.log('onChange', userInput)
+    };
 
-    this.setState(
-      {
-        items: arr,
-      },
-      () => {
-        localStorage.setItem("TodoList", this.state.items);
-      }
-    );
-    // localStorage.setItem('TodoList', this.state.items)
-  }
-
-  renderTodo() {
-    console.log(this.state.items);
-    return this.state.items?.map((item) => {
-      return (
-        <div key={item}>
-          {item}{" "}
-          <button onClick={this.removeTodo.bind(this, item)}> Done </button>
-        </div>
-      );
-    });
-  }
-
-  render() {
     return (
-      <div>
-        <h1 align="center">TodoList</h1>
-        <form className="form-row align-items-center">
-          <input
-            value={this.state.userInput}
-            type="text"
-            placeholder="Write your thingy"
-            onChange={this.onChange.bind(this)}
-            className="form-control mb-2"
-          />
-          <button onClick={this.addTodo.bind(this)}>Add</button>
-        </form>
-        <div className="list-group">{this.renderTodo()}</div>
-      </div>
+        <div>
+            <h1 align="center">TodoList</h1>
+            <form className="form-row align-items-center">
+                <input
+                    value={userInput}
+                    type="text"
+                    placeholder="Write your thingy"
+                    onChange={onChange}
+                    className="form-control mb-2"
+                />
+                <button disabled={!userInput} onClick={addTodo}>
+                    Add
+                </button>
+            </form>
+            <div className="list-group">
+                {items.map((item, index) => (
+                    <ToDoItem
+                        key={`${index}${item}`}
+                        item={item}
+                        index={index}
+                        removeTodo={removeTodo}
+                    />
+                ))}
+            </div>
+        </div>
     );
-  }
-}
+};
 
 export default TodoList;
